@@ -2,6 +2,7 @@
 /release
 .qmake.stash
 *.pro.user
+*.o
 Makefile
 Makefile.Debug
 Makefile.Release
