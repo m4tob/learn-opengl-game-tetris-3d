@@ -25,21 +25,14 @@ private:
     void setupTextures();
     GLuint loadTexture(QString image);
     void setupLighting();
-    void paintSky();
-    void drawGrass();
     void drawCube();
-    void drawPyramid();
 
-    GLuint _textureGrass, _textureSand;
-    GLuint grassListIndex, cubeListIndex, pyramidListIndex;
+    GLuint _textureBox;
+
+    GLuint cubeListIndex, viewListIndex;
     QTimer *timer;
 
-    GLint pyramidHeight;
     GLfloat cubeSize;
-
-    GLchar keyMode;
-    GLfloat stepRotate, stepTranslate;
-    GLfloat angleX, angleY, posX, posY, posZ;
 };
 
 #endif // GLWIDGET_H

@@ -1,6 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>textures/grass.jpg</file>
-        <file>textures/sand.jpg</file>
+        <file>textures/box.png</file>
     </qresource>
 </RCC>
