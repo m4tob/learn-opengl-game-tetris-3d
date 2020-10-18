@@ -1,7 +1,7 @@
 /debug
 /release
 .qmake.stash
-Piramide.pro.user
+*.pro.user
 Makefile
 Makefile.Debug
 Makefile.Release

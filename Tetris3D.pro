@@ -2,8 +2,12 @@ QT += opengl
 
 TARGET = Tetris3D
 TEMPLATE = app
-SOURCES += main.cpp glwidget.cpp
-HEADERS += glwidget.h
+SOURCES += main.cpp glwidget.cpp \
+    tetrixboard.cpp \
+    tetrixpiece.cpp
+HEADERS += glwidget.h \
+    tetrixboard.h \
+    tetrixpiece.h
 RESOURCES += res.qrc
 
 win32 {
@@ -15,8 +19,7 @@ win32 {
 }
 
 unix {
-    INCLUDEPATH += /usr/include
-    LIBS += /usr/lib/x86_64-linux-gnu/libglut.so \
+    LIBS += \
         -lGL \
         -lGLU
 }
