@@ -4,6 +4,10 @@
 #include <QKeyEvent>
 #include <QTimer>
 
+#include <iostream>
+#include <string>
+using namespace std;
+
 // Constructor
 GLWidget::GLWidget() {
     setWindowTitle("Trabalho Final - Tetris 3D");
@@ -13,12 +17,22 @@ GLWidget::GLWidget() {
     connect(timer, SIGNAL(timeout()), this, SLOT(updateGL()));
 
     cubeSize = 1; // Dimensão do bloco 1 x 1 x 1
+
+    posX = -(boardWidth * cubeSize);
+    posY = -(boardHeight * cubeSize);
+    posZ = -60 * cubeSize;
+
+    angleX = 10;
+    angleY = 0;
+
+    stepRotate = 2 * cubeSize; // Define o passo de rotação
+    stepTranslate = cubeSize * 5; // Define o passo de translação
 }
 
 // Destructor
 GLWidget::~GLWidget() {
     glDeleteLists(cubeListIndex, 1);
-    glDeleteTextures(1, &_textureBox);
+    glDeleteTextures(7, _texturesBox);
 }
 
 // Initialize OpenGL
@@ -40,7 +54,13 @@ void GLWidget::initializeGL() {
 // Carrega e configura as texturas que serão utilizadas no projeto
 void GLWidget::setupTextures() {
     glEnable(GL_TEXTURE_2D);
-    _textureBox = loadTexture("textures/box.png");
+
+    for(int x = 0; x < 7; x++) {
+        string fileName = "textures/box_" + std::to_string(x);
+        char _fileName[fileName.size() + 1];
+        strcpy(_fileName, fileName.c_str());
+        _texturesBox[x] = loadTexture(_fileName);
+    }
 }
 
 // Carrega uma determinada textura a partir do nome do arquivo
@@ -76,8 +96,6 @@ void GLWidget::setupLighting() {
 void GLWidget::drawCube() {
     cubeListIndex = glGenLists(1);
     glNewList(cubeListIndex, GL_COMPILE);
-
-        glBindTexture(GL_TEXTURE_2D, _textureBox);
         glBegin(GL_QUADS);
         // Front Face
         glNormal3f(0, 0, 1);
@@ -143,8 +161,78 @@ void GLWidget::paintGL() {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
+    // Código de debug para preencher o board
+    for(int x = 0; x < boardWidth; x++) {
+        for(int y = 0; y < boardHeight; y++)  {
+            board[x][y] = (x + y) % 8;
+        }
+    }
+
+    glTranslatef(posX, posY, posZ);
+
+    glRotatef(angleX, 0, 1, 0);
+    glRotatef(angleY, 1, 0, 0);
+
+    paintBoardBorder();
+    paintBoardContent();
+
     // Framerate control
     timer->start(20);
+}
+
+void GLWidget::paintBoardBorder() {
+    glBindTexture(GL_TEXTURE_2D, NULL);
+    glPushMatrix();
+        glTranslatef(-(6) * (cubeSize * 2), -11 * (cubeSize * 2), 0);
+
+        glPushMatrix();
+            for(int x = 0; x < (boardWidth + 2); x++) {
+                glCallList(cubeListIndex);
+                glTranslatef(cubeSize * 2, 0, 0);
+            }
+        glPopMatrix();
+
+        glPushMatrix();
+            glTranslatef(0, (boardHeight + 1) * (cubeSize * 2), 0);
+            for(int x = 0; x < (boardWidth + 2); x++) {
+                glCallList(cubeListIndex);
+                glTranslatef(cubeSize * 2, 0, 0);
+            }
+        glPopMatrix();
+
+        glPushMatrix();
+            glTranslatef(0, cubeSize * 2, 0);
+            for(int y = 0; y < boardHeight; y++) {
+                glCallList(cubeListIndex);
+                glTranslatef(0, cubeSize * 2, 0);
+            }
+        glPopMatrix();
+
+        glPushMatrix();
+            glTranslatef((boardWidth+1) * (cubeSize * 2), cubeSize * 2, 0);
+            for(int y = 0; y < boardHeight; y++) {
+                glCallList(cubeListIndex);
+                glTranslatef(0, cubeSize * 2, 0);
+            }
+        glPopMatrix();
+    glPopMatrix();
+}
+
+void GLWidget::paintBoardContent() {
+    glTranslatef(-5 * (cubeSize * 2), -10 * (cubeSize * 2), 0);
+
+    for(int x = 0; x < boardWidth; x++) {
+        glPushMatrix();
+            for(int y = 0; y < boardHeight; y++)  {
+                if(board[x][y] > 0) {
+                    glBindTexture(GL_TEXTURE_2D, _texturesBox[board[x][y] - 1]);
+                    glCallList(cubeListIndex);
+                }
+                glTranslatef(0, cubeSize * 2, 0);
+            }
+        glPopMatrix();
+        glTranslatef(cubeSize * 2, 0, 0);
+    }
 }
 
 void GLWidget::keyPressEvent(QKeyEvent *event) {
@@ -170,19 +258,21 @@ void GLWidget::keyPressEvent(QKeyEvent *event) {
             break;
 
         case Qt::Key_8:
-            // Rotate perspective (top)
+                posZ += stepTranslate;
             break;
 
         case Qt::Key_2:
-            // Rotate perspective (down)
+                posZ -= stepTranslate;
             break;
 
         case Qt::Key_4:
-            // Rotate perspective (left)
+                angleX -= stepRotate;
+                angleX = angleX < 0 ? angleX + 360 : angleX;
             break;
 
         case Qt::Key_6:
-            // Rotate perspective (right)
+                angleX += stepRotate;
+                angleX = angleX > 360 ? angleX - 360 : angleX;
             break;
 
         default:
