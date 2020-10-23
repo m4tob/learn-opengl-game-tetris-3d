@@ -3,11 +3,9 @@ QT += opengl
 TARGET = Tetris3D
 TEMPLATE = app
 SOURCES += main.cpp glwidget.cpp \
-    tetrixboard.cpp \
-    tetrixpiece.cpp
+    board.cpp
 HEADERS += glwidget.h \
-    tetrixboard.h \
-    tetrixpiece.h
+    board.h
 RESOURCES += res.qrc
 
 win32 {

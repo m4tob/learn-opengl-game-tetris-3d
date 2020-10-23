@@ -5,6 +5,8 @@
 #include <QTime>
 #include <QHash>
 
+#include "board.h"
+
 class QTimer;
 
 class GLWidget : public QGLWidget {
@@ -21,7 +23,12 @@ protected:
     void keyPressEvent(QKeyEvent *event);
     void changeEvent(QEvent *event);
 
+public Q_SLOTS:
+    virtual void updateGame();
+
 private:
+    Board board;
+
     void setupTextures();
     GLuint loadTexture(QString image);
     void setupLighting();
@@ -29,14 +36,11 @@ private:
     void paintBoardBorder();
     void paintBoardContent();
 
-    enum Piece { ZRight, ZLeft, Line, T, Square, LRight, LLeft };
-    GLuint _texturesBox[7]; // Uma para cada um dos tipos de peça
-
-    int boardWidth = 10, boardHeight = 20;
-    int board[10][20];
+    GLuint *_texturesBox; // Uma para cada um dos tipos de peça
 
     GLuint cubeListIndex, viewListIndex;
-    QTimer *timer;
+    QTimer *timer, *gameTimer;
+    GLint animationTime;
 
     GLfloat cubeSize;
 

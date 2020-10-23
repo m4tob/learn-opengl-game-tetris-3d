@@ -9,18 +9,26 @@
 using namespace std;
 
 // Constructor
-GLWidget::GLWidget() {
+GLWidget::GLWidget()
+    :board(Board(10, 20)){
+
     setWindowTitle("Trabalho Final - Tetris 3D");
 
     timer = new QTimer(this);
     timer->setSingleShot(true);
     connect(timer, SIGNAL(timeout()), this, SLOT(updateGL()));
 
+    gameTimer = new QTimer(this);
+    gameTimer->setSingleShot(true);
+    connect(gameTimer, SIGNAL(timeout()), this, SLOT(updateGame()));
+
+    animationTime = 1300;
+
     cubeSize = 1; // Dimensão do bloco 1 x 1 x 1
 
-    posX = -(boardWidth * cubeSize);
-    posY = -(boardHeight * cubeSize);
-    posZ = -60 * cubeSize;
+    posX = 0;
+    posY = 0;
+    posZ = -(board.height * 3) * cubeSize;
 
     angleX = 10;
     angleY = 0;
@@ -29,10 +37,15 @@ GLWidget::GLWidget() {
     stepTranslate = cubeSize * 5; // Define o passo de translação
 }
 
+void GLWidget::updateGame() {
+    board.updateGame();
+    gameTimer->start(animationTime);
+}
+
 // Destructor
 GLWidget::~GLWidget() {
     glDeleteLists(cubeListIndex, 1);
-    glDeleteTextures(7, _texturesBox);
+    glDeleteTextures(PIECE_COUNT, _texturesBox);
 }
 
 // Initialize OpenGL
@@ -49,13 +62,16 @@ void GLWidget::initializeGL() {
     setupLighting();
 
     drawCube();
+
+    gameTimer->start(animationTime * 2);
 }
 
 // Carrega e configura as texturas que serão utilizadas no projeto
 void GLWidget::setupTextures() {
     glEnable(GL_TEXTURE_2D);
 
-    for(int x = 0; x < 7; x++) {
+    _texturesBox = (GLuint *) malloc(PIECE_COUNT * sizeof(GLuint));
+    for(int x = 0; x < PIECE_COUNT; x++) {
         string fileName = "textures/box_" + std::to_string(x);
         char _fileName[fileName.size() + 1];
         strcpy(_fileName, fileName.c_str());
@@ -138,35 +154,11 @@ void GLWidget::drawCube() {
     glEndList();
 }
 
-// This is called when the OpenGL window is resized
-void GLWidget::resizeGL(int width, int height) {
-    // Prevent divide by zero (in the gluPerspective call)
-    if (height == 0)
-        height = 1;
-
-    glViewport(0, 0, width, height); // Reset current viewport
-
-    glMatrixMode(GL_PROJECTION); // Select projection matrix
-    glLoadIdentity(); // Reset projection matrix
-
-    gluPerspective(45, static_cast<GLfloat>(width)/height, 0.1, 1000); // Calculate aspect ratio
-
-    glMatrixMode(GL_MODELVIEW); // Select modelview matrix
-    glLoadIdentity(); // Reset modelview matrix
-}
-
 // OpenGL painting code goes here
 void GLWidget::paintGL() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-
-    // Código de debug para preencher o board
-    for(int x = 0; x < boardWidth; x++) {
-        for(int y = 0; y < boardHeight; y++)  {
-            board[x][y] = (x + y) % 8;
-        }
-    }
 
     glTranslatef(posX, posY, posZ);
 
@@ -183,52 +175,52 @@ void GLWidget::paintGL() {
 void GLWidget::paintBoardBorder() {
     glBindTexture(GL_TEXTURE_2D, NULL);
     glPushMatrix();
-        glTranslatef(-(6) * (cubeSize * 2), -11 * (cubeSize * 2), 0);
+        glTranslatef(-(board.width * cubeSize), (board.height * cubeSize), 0);
 
         glPushMatrix();
-            for(int x = 0; x < (boardWidth + 2); x++) {
+            for(int x = 0; x < (board.width + 2); x++) {
                 glCallList(cubeListIndex);
                 glTranslatef(cubeSize * 2, 0, 0);
             }
         glPopMatrix();
 
         glPushMatrix();
-            glTranslatef(0, (boardHeight + 1) * (cubeSize * 2), 0);
-            for(int x = 0; x < (boardWidth + 2); x++) {
+            glTranslatef(0, -(board.height + 1) * (cubeSize * 2), 0);
+            for(int x = 0; x < (board.width + 2); x++) {
                 glCallList(cubeListIndex);
                 glTranslatef(cubeSize * 2, 0, 0);
             }
         glPopMatrix();
 
         glPushMatrix();
-            glTranslatef(0, cubeSize * 2, 0);
-            for(int y = 0; y < boardHeight; y++) {
+            glTranslatef(0, -(cubeSize * 2), 0);
+            for(int y = 0; y < board.height; y++) {
                 glCallList(cubeListIndex);
-                glTranslatef(0, cubeSize * 2, 0);
+                glTranslatef(0, -(cubeSize * 2), 0);
             }
         glPopMatrix();
 
         glPushMatrix();
-            glTranslatef((boardWidth+1) * (cubeSize * 2), cubeSize * 2, 0);
-            for(int y = 0; y < boardHeight; y++) {
+            glTranslatef((board.width + 1) * (cubeSize * 2), -(cubeSize * 2), 0);
+            for(int y = 0; y < board.height; y++) {
                 glCallList(cubeListIndex);
-                glTranslatef(0, cubeSize * 2, 0);
+                glTranslatef(0, -(cubeSize * 2), 0);
             }
         glPopMatrix();
     glPopMatrix();
 }
 
 void GLWidget::paintBoardContent() {
-    glTranslatef(-5 * (cubeSize * 2), -10 * (cubeSize * 2), 0);
+    glTranslatef(-((board.width - 2) * cubeSize), ((board.height - 2) * cubeSize), 0);
 
-    for(int x = 0; x < boardWidth; x++) {
+    for(int x = 0; x < board.width; x++) {
         glPushMatrix();
-            for(int y = 0; y < boardHeight; y++)  {
-                if(board[x][y] > 0) {
-                    glBindTexture(GL_TEXTURE_2D, _texturesBox[board[x][y] - 1]);
+            for(int y = 0; y < board.height; y++)  {
+                if(board.currentBoard[x][y] > 0) {
+                    glBindTexture(GL_TEXTURE_2D, _texturesBox[board.currentBoard[x][y] - 1]);
                     glCallList(cubeListIndex);
                 }
-                glTranslatef(0, cubeSize * 2, 0);
+                glTranslatef(0, -(cubeSize * 2), 0);
             }
         glPopMatrix();
         glTranslatef(cubeSize * 2, 0, 0);
@@ -242,19 +234,19 @@ void GLWidget::keyPressEvent(QKeyEvent *event) {
             break;
 
         case Qt::Key_R:
-            // Rotate
+            board.rotate();
             break;
 
         case Qt::Key_Down:
-            // Move down
+            board.moveDown();
             break;
 
         case Qt::Key_Left:
-            // Move left
+            board.moveLeft();
             break;
 
         case Qt::Key_Right:
-            // Move Right
+            board.moveRight();
             break;
 
         case Qt::Key_8:
@@ -278,6 +270,23 @@ void GLWidget::keyPressEvent(QKeyEvent *event) {
         default:
             QGLWidget::keyPressEvent(event);
     }
+}
+
+// This is called when the OpenGL window is resized
+void GLWidget::resizeGL(int width, int height) {
+    // Prevent divide by zero (in the gluPerspective call)
+    if (height == 0)
+        height = 1;
+
+    glViewport(0, 0, width, height); // Reset current viewport
+
+    glMatrixMode(GL_PROJECTION); // Select projection matrix
+    glLoadIdentity(); // Reset projection matrix
+
+    gluPerspective(45, static_cast<GLfloat>(width)/height, 0.1, 1000); // Calculate aspect ratio
+
+    glMatrixMode(GL_MODELVIEW); // Select modelview matrix
+    glLoadIdentity(); // Reset modelview matrix
 }
 
 void GLWidget::changeEvent(QEvent *event) {

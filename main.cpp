@@ -7,6 +7,7 @@
  */
 
 #include <QApplication>
+#include <QDesktopWidget>
 #include "glwidget.h"
 
 int main(int argc, char *argv[]) {
@@ -21,7 +22,9 @@ int main(int argc, char *argv[]) {
 
     // Create and show our OpenGL window
     GLWidget w;
-    w.setMinimumSize(800, 600);
+    w.setMinimumSize(600, 800);
+    w.adjustSize();
+    w.move(QApplication::desktop()->screen()->rect().center() - w.rect().center());
     w.show();
 
     // Let's roll!
