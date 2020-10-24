@@ -106,9 +106,6 @@ void Board::refreshCurrentBoard() {
         }
     }
 
-    if(checkingLines)
-        return;
-
     // Copia a peça para currentBoard
     for(int x = 0; x < pieceStateSize && (pieceX + x < width); x++) {
         for(int y = 0; y < pieceStateSize && (pieceY + y < height); y++) {
@@ -154,6 +151,8 @@ void Board::registerScore() {
 void Board::updateGame() {
     if(!checkingLines || !checkLines())
         moveDown();
+    else
+        pieceY = -1;
 }
 
 void Board::dropPiece() {
@@ -196,15 +195,18 @@ void Board::moveLeft() {
         }
     }
 
-    // Verifica se há colunas da peça à esquerda vazias
-    int offset = 0;
-    if(pieceState[0][0] == 0 && pieceState[0][1] == 0)
-        offset = 1;
-    if(offset == 1 && pieceState[1][0] == 0 && pieceState[1][1] == 0)
-        offset = 2;
-    if(offset == 2 && pieceState[2][0] == 0 && pieceState[2][1] == 0)
-        offset = 3;
-    bool hasWallInLeft = (pieceX + offset) <= 0;
+    bool hasWallInLeft = false;
+    for(int y = 0; y < pieceStateSize; y++) {
+        if((pieceY + y) >= height)
+            break;
+        for(int x = 0; x < pieceStateSize; x++) {
+            if(pieceState[x][y] > 0) {
+                if((pieceX + x - 1) < 0)
+                    hasWallInLeft = true;
+                break;
+            }
+        }
+    }
 
     if(!hasPieceInLeft && !hasWallInLeft)
         pieceX--;
@@ -229,15 +231,18 @@ void Board::moveRight() {
         }
     }
 
-    // Verifica se há colunas da peça à direita vazias
-    int offset = 0;
-    if(pieceState[3][0] == 0 && pieceState[3][1] == 0)
-        offset = 1;
-    if(offset == 1 && pieceState[2][0] == 0 && pieceState[2][1] == 0)
-        offset = 2;
-    if(offset == 2 && pieceState[1][0] == 0 && pieceState[1][1] == 0)
-        offset = 3;
-    bool hasWallInRight = ((pieceX + pieceStateSize) - offset) >= width;
+    bool hasWallInRight = false;
+    for(int y = 0; y < pieceStateSize; y++) {
+        if((pieceY + y) >= height)
+            break;
+        for(int x = pieceStateSize - 1; x >= 0; x--) {
+            if(pieceState[x][y] > 0) {
+                if((pieceX + x + 1) >= width)
+                    hasWallInRight = true;
+                break;
+            }
+        }
+    }
 
     if(!hasPieceInRight && !hasWallInRight)
         pieceX++;
