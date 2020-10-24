@@ -69,8 +69,6 @@ void Board::refreshCurrentBoard() {
     // Copia a peça para currentBoard
     for(int x = 0; x < pieceStateSize && (pieceX + x < width); x++) {
         for(int y = 0; y < pieceStateSize && (pieceY + y < height); y++) {
-            int _x = pieceX + x;
-            int _y = pieceY + y;
             if(pieceState[x][y] > 0 && pieceState[x][y] <= PIECE_COUNT)
                 currentBoard[pieceX + x][pieceY + y] = pieceState[x][y];
         }
@@ -129,11 +127,22 @@ void Board::moveRight() {
 }
 
 void Board::moveDown() {
-    bool rowIsFilled = pieceY == (height - 1);
-    if(!rowIsFilled && pieceY < (height - 1))
+    bool nextRowIsFilled = false;
+    for(int x = 0; x < 4; x++) {
+        if((pieceX + x) < 0)
+            continue;
+        if((pieceX + x) >= width)
+            break;
+
+        for(int y = 3; y >= 0; y--) {
+            if(pieceState[x][y] > 0 && ((pieceY + y + 1) >= height || droppedBoard[pieceX + x][pieceY + y + 1] > 0))
+                nextRowIsFilled = true;
+        }
+    }
+    if(!nextRowIsFilled && pieceY < (height - 1))
         pieceY++;
 
-    if(rowIsFilled)
+    if(nextRowIsFilled)
         dropPiece();
 
     refreshCurrentBoard();

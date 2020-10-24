@@ -217,8 +217,7 @@ void GLWidget::paintBoardContent() {
     for(int x = 0; x < board.width; x++) {
         glPushMatrix();
             for(int y = 0; y < board.height; y++)  {
-                if(board.currentBoard[x][y] > 0) {
-                    int a = board.currentBoard[x][y];
+                if(board.currentBoard[x][y] > 0 && board.currentBoard[x][y] <= PIECE_COUNT) {
                     glBindTexture(GL_TEXTURE_2D, _texturesBox[board.currentBoard[x][y]]);
                     glCallList(cubeListIndex);
                 }
