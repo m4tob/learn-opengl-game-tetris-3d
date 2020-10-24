@@ -8,7 +8,7 @@ static constexpr int pieceTable[PIECE_COUNT][4][2] = {
         { {0, 1}, {1, 1}, {1, 0}, {0, 0} }, // ZRight
         { {1, 0}, {1, 1}, {0, 1}, {0, 0} }, // ZLeft
         { {1, 0}, {1, 0}, {1, 0}, {1, 0} }, // Line
-        { {0, 0}, {0, 1}, {1, 1}, {0, 1} }, // T
+        { {0, 1}, {1, 1}, {0, 1}, {0, 0} }, // T
         { {0, 0}, {1, 1}, {1, 1}, {0, 0} }, // Square
         { {1, 1}, {0, 1}, {0, 1}, {0, 0} }, // LRight
         { {0, 1}, {0, 1}, {1, 1}, {0, 0} }  // LLeft
@@ -56,6 +56,7 @@ private:
     Piece randomPiece();
 
     void updatePieceState();
+    void executeRotation();
     void refreshCurrentBoard();
 
     void dropPiece();

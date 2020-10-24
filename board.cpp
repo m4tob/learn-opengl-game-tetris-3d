@@ -33,14 +33,13 @@ void Board::resetPiece() {
     piece = nextPiece;
     pieceX = (width - pieceStateSize) / 2;
     pieceY = 0;
+    pieceRotation = 0;
     nextPiece = randomPiece();
     updatePieceState();
 }
 
 Piece Board::randomPiece() {
-    int p = QRandomGenerator::global()->bounded(PIECE_COUNT) + 1;
-    printf("%d ", p);
-    return Piece(p);
+    return Piece(QRandomGenerator::global()->bounded(PIECE_COUNT) + 1);
 }
 
 void Board::updatePieceState() {
@@ -51,11 +50,50 @@ void Board::updatePieceState() {
     }
     for(int x = 0; x < 4; x++) {
         for(int y = 0; y < 2; y++) {
-            pieceState[x][y] = pieceTable[piece - 1][x][y] > 0 ? piece : 0;
+            pieceState[x][y] = pieceTable[piece][x][y] > 0 ? piece : 0;
         }
     }
 
+    executeRotation();
+
     refreshCurrentBoard();
+}
+
+using namespace std;
+
+void Board::executeRotation() {
+    if(pieceRotation == 0)
+        return;
+    if(piece == Point || piece == Square)
+        return;
+    if(pieceRotation % 2 == 0 && (piece == Line || piece == ZLeft || piece == ZRight))
+        return;
+
+    if(piece == Line) {
+        pieceState[0][0] = piece;
+        pieceState[0][1] = piece;
+        pieceState[0][2] = piece;
+        pieceState[0][3] = piece;
+        pieceState[1][0] = 0;
+        pieceState[2][0] = 0;
+        pieceState[3][0] = 0;
+        return;
+    }
+
+    int aux;
+    for(int r = 0; r < pieceRotation; r++) {
+        aux = pieceState[2][0];
+        pieceState[2][0] = pieceState[0][0];
+        pieceState[0][0] = pieceState[0][2];
+        pieceState[0][2] = pieceState[2][2];
+        pieceState[2][2] = aux;
+
+        aux = pieceState[2][1];
+        pieceState[2][1] = pieceState[1][0];
+        pieceState[1][0] = pieceState[0][1];
+        pieceState[0][1] = pieceState[1][2];
+        pieceState[1][2] = aux;
+    }
 }
 
 void Board::refreshCurrentBoard() {
@@ -90,7 +128,9 @@ void Board::dropPiece() {
 }
 
 void Board::rotate() {
-    pieceRotation = (pieceRotation < 3) ? (pieceRotation + 1) : 0;
+    pieceRotation++;
+    if(pieceRotation == 4)
+        pieceRotation = 0;
     updatePieceState();
 }
 
