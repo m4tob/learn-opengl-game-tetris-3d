@@ -39,6 +39,9 @@ GLWidget::GLWidget()
 
 void GLWidget::updateGame() {
     board.updateGame();
+    if(board.gameOver) {
+        close();
+    }
     gameTimer->start(animationTime);
 }
 

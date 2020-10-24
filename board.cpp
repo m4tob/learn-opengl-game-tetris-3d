@@ -26,6 +26,7 @@ void Board::reset() {
 
     score = 0;
     checkingLines = false;
+    gameOver = false;
     nextPiece = randomPiece();
     resetPiece();
 }
@@ -38,6 +39,17 @@ void Board::resetPiece() {
     nextPiece = randomPiece();
     updatePieceState();
     refreshCurrentBoard();
+}
+
+void Board::checkEndGame() {
+    for(int x = 0; x < pieceStateSize; x++) {
+        for(int y = 0; y < pieceStateSize; y++) {
+            if(pieceState[x][y] > 0 && droppedBoard[pieceX + x][pieceY + y] > 0) {// Game Over
+                gameOver = true;
+                return;
+            }
+        }
+    }
 }
 
 Piece Board::randomPiece() {
@@ -153,6 +165,8 @@ void Board::updateGame() {
         moveDown();
     else
         pieceY = -1;
+
+    checkEndGame();
 }
 
 void Board::dropPiece() {

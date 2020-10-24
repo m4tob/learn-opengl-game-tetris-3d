@@ -28,6 +28,8 @@ public:
     int width, height;
     int **currentBoard;
 
+    bool gameOver;
+
     int **getCurrentBoard();
 
     void rotate();
@@ -55,6 +57,7 @@ private:
 
     void reset();
     void resetPiece();
+    void checkEndGame();
     Piece randomPiece();
 
     void updatePieceState();
