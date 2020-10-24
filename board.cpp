@@ -25,6 +25,7 @@ void Board::reset() {
     }
 
     score = 0;
+    checkingLines = false;
     nextPiece = randomPiece();
     resetPiece();
 }
@@ -36,6 +37,7 @@ void Board::resetPiece() {
     pieceRotation = 0;
     nextPiece = randomPiece();
     updatePieceState();
+    refreshCurrentBoard();
 }
 
 Piece Board::randomPiece() {
@@ -48,7 +50,7 @@ void Board::updatePieceState() {
             pieceState[x][y] = 0;
         }
     }
-    for(int x = 0; x < 4; x++) {
+    for(int x = 0; x < pieceStateSize; x++) {
         for(int y = 0; y < 2; y++) {
             pieceState[x][y] = pieceTable[piece][x][y] > 0 ? piece : 0;
         }
@@ -104,6 +106,9 @@ void Board::refreshCurrentBoard() {
         }
     }
 
+    if(checkingLines)
+        return;
+
     // Copia a peça para currentBoard
     for(int x = 0; x < pieceStateSize && (pieceX + x < width); x++) {
         for(int y = 0; y < pieceStateSize && (pieceY + y < height); y++) {
@@ -113,8 +118,42 @@ void Board::refreshCurrentBoard() {
     }
 }
 
+bool Board::checkLines() {
+    bool filledRow;
+    for(int y = (height - 1); y >= 0; y--) {
+        filledRow = true;
+        for(int x = 0; x < width; x++)
+            filledRow &= droppedBoard[x][y] > 0;
+
+        if(filledRow) {
+            removeLine(y);
+            registerScore();
+            return true;
+        }
+    }
+
+    checkingLines = false;
+    return false;
+}
+
+void Board::removeLine(int line) {
+    for(int y = line; y > 0; y--)
+        for(int x = 0; x < width; x++)
+            droppedBoard[x][y] = droppedBoard[x][y - 1];
+
+    for(int x = 0; x < width; x++)
+        droppedBoard[x][0] = 0;
+
+    refreshCurrentBoard();
+}
+
+void Board::registerScore() {
+    score++;
+}
+
 void Board::updateGame() {
-    moveDown();
+    if(!checkingLines || !checkLines())
+        moveDown();
 }
 
 void Board::dropPiece() {
@@ -124,10 +163,16 @@ void Board::dropPiece() {
                 droppedBoard[pieceX + x][pieceY + y] = pieceState[x][y];
         }
     }
+
+    checkingLines = true;
+
     resetPiece();
 }
 
 void Board::rotate() {
+    if(checkingLines)
+        return;
+
     pieceRotation++;
     if(pieceRotation == 4)
         pieceRotation = 0;
@@ -135,6 +180,22 @@ void Board::rotate() {
 }
 
 void Board::moveLeft() {
+    if(checkingLines)
+        return;
+
+    bool hasPieceInLeft = false;
+    for(int y = 0; y < pieceStateSize; y++) {
+        if((pieceY + y) >= height)
+            break;
+        for(int x = 0; x < pieceStateSize; x++) {
+            if(pieceState[x][y] > 0) {
+                if((pieceX + x) > 1 && droppedBoard[pieceX + x - 1][pieceY + y] > 0)
+                    hasPieceInLeft = true;
+                break;
+            }
+        }
+    }
+
     // Verifica se há colunas da peça à esquerda vazias
     int offset = 0;
     if(pieceState[0][0] == 0 && pieceState[0][1] == 0)
@@ -143,14 +204,31 @@ void Board::moveLeft() {
         offset = 2;
     if(offset == 2 && pieceState[2][0] == 0 && pieceState[2][1] == 0)
         offset = 3;
+    bool hasWallInLeft = (pieceX + offset) <= 0;
 
-    if((pieceX + offset) > 0)
+    if(!hasPieceInLeft && !hasWallInLeft)
         pieceX--;
 
     refreshCurrentBoard();
 }
 
 void Board::moveRight() {
+    if(checkingLines)
+        return;
+
+    bool hasPieceInRight = false;
+    for(int y = 0; y < pieceStateSize; y++) {
+        if((pieceY + y) >= height)
+            break;
+        for(int x = pieceStateSize - 1; x >= 0; x--) {
+            if(pieceState[x][y] > 0) {
+                if((pieceX + x) < (width - 1) && droppedBoard[pieceX + x + 1][pieceY + y] > 0)
+                    hasPieceInRight = true;
+                break;
+            }
+        }
+    }
+
     // Verifica se há colunas da peça à direita vazias
     int offset = 0;
     if(pieceState[3][0] == 0 && pieceState[3][1] == 0)
@@ -159,22 +237,26 @@ void Board::moveRight() {
         offset = 2;
     if(offset == 2 && pieceState[1][0] == 0 && pieceState[1][1] == 0)
         offset = 3;
+    bool hasWallInRight = ((pieceX + pieceStateSize) - offset) >= width;
 
-    if(((pieceX + 4) - offset) < width)
+    if(!hasPieceInRight && !hasWallInRight)
         pieceX++;
 
     refreshCurrentBoard();
 }
 
 void Board::moveDown() {
+    if(checkingLines)
+        return;
+
     bool nextRowIsFilled = false;
-    for(int x = 0; x < 4; x++) {
+    for(int x = 0; x < pieceStateSize; x++) {
         if((pieceX + x) < 0)
             continue;
         if((pieceX + x) >= width)
             break;
 
-        for(int y = 3; y >= 0; y--) {
+        for(int y = pieceStateSize - 1; y >= 0; y--) {
             if(pieceState[x][y] > 0 && ((pieceY + y + 1) >= height || droppedBoard[pieceX + x][pieceY + y + 1] > 0))
                 nextRowIsFilled = true;
         }

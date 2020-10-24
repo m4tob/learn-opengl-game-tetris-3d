@@ -44,6 +44,8 @@ public Q_SLOTS:
 private:
     int **droppedBoard;
 
+    bool checkingLines;
+
     Piece piece;
     int pieceStateSize = 4;
     int pieceState[4][4];
@@ -58,6 +60,9 @@ private:
     void updatePieceState();
     void executeRotation();
     void refreshCurrentBoard();
+    bool checkLines();
+    void removeLine(int y);
+    void registerScore();
 
     void dropPiece();
 };
