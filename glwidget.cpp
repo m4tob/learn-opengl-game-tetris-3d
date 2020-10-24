@@ -22,7 +22,7 @@ GLWidget::GLWidget()
     gameTimer->setSingleShot(true);
     connect(gameTimer, SIGNAL(timeout()), this, SLOT(updateGame()));
 
-    animationTime = 1300;
+    animationTime = 1000;
 
     cubeSize = 1; // Dimensão do bloco 1 x 1 x 1
 
@@ -70,8 +70,9 @@ void GLWidget::initializeGL() {
 void GLWidget::setupTextures() {
     glEnable(GL_TEXTURE_2D);
 
+    _textureBorder = loadTexture("textures/border.png");
     _texturesBox = (GLuint *) malloc(PIECE_COUNT * sizeof(GLuint));
-    for(int x = 0; x < PIECE_COUNT; x++) {
+    for(int x = 1; x <= PIECE_COUNT; x++) {
         string fileName = "textures/box_" + std::to_string(x);
         char _fileName[fileName.size() + 1];
         strcpy(_fileName, fileName.c_str());
@@ -173,7 +174,7 @@ void GLWidget::paintGL() {
 }
 
 void GLWidget::paintBoardBorder() {
-    glBindTexture(GL_TEXTURE_2D, NULL);
+    glBindTexture(GL_TEXTURE_2D, _textureBorder);
     glPushMatrix();
         glTranslatef(-(board.width * cubeSize), (board.height * cubeSize), 0);
 
@@ -217,7 +218,8 @@ void GLWidget::paintBoardContent() {
         glPushMatrix();
             for(int y = 0; y < board.height; y++)  {
                 if(board.currentBoard[x][y] > 0) {
-                    glBindTexture(GL_TEXTURE_2D, _texturesBox[board.currentBoard[x][y] - 1]);
+                    int a = board.currentBoard[x][y];
+                    glBindTexture(GL_TEXTURE_2D, _texturesBox[board.currentBoard[x][y]]);
                     glCallList(cubeListIndex);
                 }
                 glTranslatef(0, -(cubeSize * 2), 0);

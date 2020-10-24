@@ -36,6 +36,7 @@ private:
     void paintBoardBorder();
     void paintBoardContent();
 
+    GLuint _textureBorder;
     GLuint *_texturesBox; // Uma para cada um dos tipos de peça
 
     GLuint cubeListIndex, viewListIndex;

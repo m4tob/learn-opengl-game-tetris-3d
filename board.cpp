@@ -17,11 +17,12 @@ Board::Board(int width, int height) {
 }
 
 void Board::reset() {
-    for(int y = 0; y < height; y++)
-        for(int x = 0; x < width; x++) {
+    for(int x = 0; x < width; x++) {
+        for(int y = 0; y < height; y++) {
             droppedBoard[x][y] = 0;
             currentBoard[x][y] = 0;
         }
+    }
 
     score = 0;
     nextPiece = randomPiece();
@@ -30,39 +31,63 @@ void Board::reset() {
 
 void Board::resetPiece() {
     piece = nextPiece;
-    pieceX = (width - 4) / 2;
+    pieceX = (width - pieceStateSize) / 2;
     pieceY = 0;
     nextPiece = randomPiece();
     updatePieceState();
 }
 
 Piece Board::randomPiece() {
-    return Piece(QRandomGenerator::global()->bounded(PIECE_COUNT) + 1);
+    int p = QRandomGenerator::global()->bounded(PIECE_COUNT) + 1;
+    printf("%d ", p);
+    return Piece(p);
 }
 
 void Board::updatePieceState() {
-}
-
-int countY = 0, countX = 0;
-void Board::updateGame() {
-    droppedBoard[countX][countY] = QRandomGenerator::global()->bounded(PIECE_COUNT) + 1;
-    countX++;
-    if(countX == width) {
-        countX = 0;
-        countY++;
-        if(countY == height)
-            countY = 0;
+    for(int x = 0; x < pieceStateSize; x++) {
+        for(int y = 0; y < pieceStateSize; y++) {
+            pieceState[x][y] = 0;
+        }
+    }
+    for(int x = 0; x < 4; x++) {
+        for(int y = 0; y < 2; y++) {
+            pieceState[x][y] = pieceTable[piece - 1][x][y] > 0 ? piece : 0;
+        }
     }
 
-    for(int y = 0; y < height; y++) {
-        for(int x = 0; x < width; x++) {
+    refreshCurrentBoard();
+}
+
+void Board::refreshCurrentBoard() {
+    // Copia a board para currentBoard
+    for(int x = 0; x < width; x++) {
+        for(int y = 0; y < height; y++) {
             currentBoard[x][y] = droppedBoard[x][y];
+        }
+    }
+
+    // Copia a peça para currentBoard
+    for(int x = 0; x < pieceStateSize && (pieceX + x < width); x++) {
+        for(int y = 0; y < pieceStateSize && (pieceY + y < height); y++) {
+            int _x = pieceX + x;
+            int _y = pieceY + y;
+            if(pieceState[x][y] > 0 && pieceState[x][y] <= PIECE_COUNT)
+                currentBoard[pieceX + x][pieceY + y] = pieceState[x][y];
         }
     }
 }
 
+void Board::updateGame() {
+    moveDown();
+}
+
 void Board::dropPiece() {
-    // TODO - Adiciona o piece no board
+    for(int x = 0; x < pieceStateSize && (pieceX + x < width); x++) {
+        for(int y = 0; y < pieceStateSize && (pieceY + y < height); y++) {
+            if(pieceState[x][y] > 0)
+                droppedBoard[pieceX + x][pieceY + y] = pieceState[x][y];
+        }
+    }
     resetPiece();
 }
 
@@ -72,20 +97,44 @@ void Board::rotate() {
 }
 
 void Board::moveLeft() {
-    if(pieceX > 0)
+    // Verifica se há colunas da peça à esquerda vazias
+    int offset = 0;
+    if(pieceState[0][0] == 0 && pieceState[0][1] == 0)
+        offset = 1;
+    if(offset == 1 && pieceState[1][0] == 0 && pieceState[1][1] == 0)
+        offset = 2;
+    if(offset == 2 && pieceState[2][0] == 0 && pieceState[2][1] == 0)
+        offset = 3;
+
+    if((pieceX + offset) > 0)
         pieceX--;
+
+    refreshCurrentBoard();
 }
 
 void Board::moveRight() {
-    if(pieceX < (width - 1))
+    // Verifica se há colunas da peça à direita vazias
+    int offset = 0;
+    if(pieceState[3][0] == 0 && pieceState[3][1] == 0)
+        offset = 1;
+    if(offset == 1 && pieceState[2][0] == 0 && pieceState[2][1] == 0)
+        offset = 2;
+    if(offset == 2 && pieceState[1][0] == 0 && pieceState[1][1] == 0)
+        offset = 3;
+
+    if(((pieceX + 4) - offset) < width)
         pieceX++;
+
+    refreshCurrentBoard();
 }
 
 void Board::moveDown() {
-    bool rowIsEmpty = false;
-    if(rowIsEmpty && pieceY < (height - 1))
+    bool rowIsFilled = pieceY == (height - 1);
+    if(!rowIsFilled && pieceY < (height - 1))
         pieceY++;
 
-    if(!rowIsEmpty)
+    if(rowIsFilled)
         dropPiece();
+
+    refreshCurrentBoard();
 }
