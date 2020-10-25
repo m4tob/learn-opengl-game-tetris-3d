@@ -1,3 +1,15 @@
+/*
+ * UNIVERSIDADE ESTADUAL DE FEIRA DE SANTANA - UEFS
+ * Engenharia da Computação
+ * TEC431 - Computação Gráfica
+ *
+ * Trabalho Final - 2019.2E
+ *
+ * Alunos:
+ *      Matheus Oliveira Borges <matob@live.com>
+ *      Luiz Ricardo Inês de Souza <lzricardo.ecomp@gmail.com>
+ *
+ */
 #ifndef GLWIDGET_H
 #define GLWIDGET_H
 
@@ -21,32 +33,30 @@ protected:
     void resizeGL(int boardWidth, int boardHeight);
     void paintGL();
     void keyPressEvent(QKeyEvent *event);
-    void changeEvent(QEvent *event);
-
-public Q_SLOTS:
-    virtual void updateGame();
 
 private:
-    Board board;
-
+    GLuint _textureBorder;
+    GLuint *_texturesBox; // Uma para cada um dos tipos de peça
     void setupTextures();
     GLuint loadTexture(QString image);
     void setupLighting();
+
+    GLfloat cubeSize;
+    GLuint cubeListIndex;
+    GLfloat stepRotate, stepTranslate;
+    GLfloat angleX, angleY, posX, posY, posZ;
     void drawCube();
     void paintBoardBorder();
     void paintBoardContent();
+    void gameOver();
 
-    GLuint _textureBorder;
-    GLuint *_texturesBox; // Uma para cada um dos tipos de peça
+    QTimer *timer; // Timer para a taxa de atualização da tela (framerate)
+    QTimer *gameCicleTimer; // Timer para a taxa de execução do jogo (ciclo de jogo)
+    GLint cicleTime;
+    Board board;
 
-    GLuint cubeListIndex, viewListIndex;
-    QTimer *timer, *gameTimer;
-    GLint animationTime;
-
-    GLfloat cubeSize;
-
-    GLfloat stepRotate, stepTranslate;
-    GLfloat angleX, angleY, posX, posY, posZ;
+public Q_SLOTS:
+    virtual void updateGameCicle();
 };
 
 #endif // GLWIDGET_H

@@ -24,6 +24,7 @@ int main(int argc, char *argv[]) {
     GLWidget w;
     w.setMinimumSize(600, 800);
     w.adjustSize();
+    // Centraliza a janela no meio da tela
     w.move(QApplication::desktop()->screen()->rect().center() - w.rect().center());
     w.show();
 

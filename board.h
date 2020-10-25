@@ -1,8 +1,30 @@
+/*
+ * UNIVERSIDADE ESTADUAL DE FEIRA DE SANTANA - UEFS
+ * Engenharia da Computação
+ * TEC431 - Computação Gráfica
+ *
+ * Trabalho Final - 2019.2E
+ *
+ * Alunos:
+ *      Matheus Oliveira Borges <matob@live.com>
+ *      Luiz Ricardo Inês de Souza <lzricardo.ecomp@gmail.com>
+ *
+ */
 #ifndef BOARD_H
 #define BOARD_H
 
-enum Piece { Point, ZRight, ZLeft, Line, T, Square, LRight, LLeft, PIECE_COUNT };
+#include <QBasicTimer>
+#include <QGLWidget>
+#include <QTime>
+#include <QHash>
 
+// Enum com as peças possíveis para utilização no jogo
+enum Piece {
+        Point, ZRight, ZLeft, Line, T, Square, LRight, LLeft,
+        PIECE_COUNT // utilizado para identificar a quantidade de peças
+    };
+
+// Matriz que identifica o desenho inicial de cada uma das peças
 static constexpr int pieceTable[PIECE_COUNT][4][2] = {
         { {0, 0}, {0, 0}, {1, 0}, {0, 0} }, // Point
         { {0, 1}, {1, 1}, {1, 0}, {0, 0} }, // ZRight
@@ -14,60 +36,47 @@ static constexpr int pieceTable[PIECE_COUNT][4][2] = {
         { {0, 1}, {0, 1}, {1, 1}, {0, 0} }  // LLeft
     };
 
-#include <QBasicTimer>
-#include <QGLWidget>
-#include <QTime>
-#include <QHash>
-
-class Board
-{
+class Board {
 
 public:
     Board(int width, int height);
+    ~Board();
 
     int width, height;
-    int **currentBoard;
-
+    int **currentBoard; // Matriz que armazena as peças que já foram posicionadas e a peça atual
+    Piece nextPiece;
+    int score;
     bool gameOver;
 
-    int **getCurrentBoard();
+    void nextGameCicle();
 
     void rotate();
     void moveLeft();
     void moveRight();
     void moveDown();
 
-    Piece nextPiece;
-    int score;
-
-public Q_SLOTS:
-    virtual void updateGame();
-
 private:
-    int **droppedBoard;
-
-    bool checkingLines;
+    int **droppedBoard; // Matriz que armazena as peças que já foram posicionadas
 
     Piece piece;
     int pieceStateSize = 4;
-    int pieceState[4][4];
-    int pieceRotation; // 0 - 3
-    int pieceX;
-    int pieceY;
+    int pieceState[4][4]; // Armazena o estado atual da peça
+    int pieceX, pieceY, pieceRotation;
+
+    bool checkingLines;
 
     void reset();
     void resetPiece();
-    void checkEndGame();
     Piece randomPiece();
-
     void updatePieceState();
     void executeRotation();
+
     void refreshCurrentBoard();
+    void dropPiece();
     bool checkLines();
     void removeLine(int y);
     void registerScore();
-
-    void dropPiece();
+    void checkEndGame();
 };
 
 #endif // BOARD_H

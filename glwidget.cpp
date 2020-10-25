@@ -1,3 +1,31 @@
+/*
+ * UNIVERSIDADE ESTADUAL DE FEIRA DE SANTANA - UEFS
+ * Engenharia da Computação
+ * TEC431 - Computação Gráfica
+ *
+ * Trabalho Final - 2019.2E
+ *
+ * Alunos:
+ *      Matheus Oliveira Borges <matob@live.com>
+ *      Luiz Ricardo Inês de Souza <lzricardo.ecomp@gmail.com>
+ *
+ * -------------------------------------------------------------------------------
+ *
+ * ============================================================================
+ * ===============================  INSTRUÇÕES  ===============================
+ * ============================================================================
+ * O jogo se baseia no tradicional jogo de tetris onde o objetivo é formar o máximo
+ * de linhas completas de blocos sem deixar tocar o topo da tela.
+ *
+ * -> CONTROLES:
+ * R                      : Rotaciona a peça no sentido horário (através da manipulação de matriz);
+ * 2 e 8                  : Movimenta o tabuleiro no eixo Z. Efeito de zoom ("escala");
+ * 4 e 6                  : Rotaciona o tabuleiro no eixo X;
+ * Direcionais (Esquerda,
+ * Direita e Baixo)       : Move a peça na direção pressionada;
+ * ESC                    : Fecha o Jogo
+ *
+ */
 #include "glwidget.h"
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -11,7 +39,7 @@ using namespace std;
 
 // Constructor
 GLWidget::GLWidget()
-    :board(Board(10, 20)){
+    :board(Board(10, 20)) {
 
     setWindowTitle("Trabalho Final - Tetris 3D");
 
@@ -19,11 +47,10 @@ GLWidget::GLWidget()
     timer->setSingleShot(true);
     connect(timer, SIGNAL(timeout()), this, SLOT(updateGL()));
 
-    gameTimer = new QTimer(this);
-    gameTimer->setSingleShot(true);
-    connect(gameTimer, SIGNAL(timeout()), this, SLOT(updateGame()));
-
-    animationTime = 1000;
+    gameCicleTimer = new QTimer(this);
+    gameCicleTimer->setSingleShot(true);
+    connect(gameCicleTimer, SIGNAL(timeout()), this, SLOT(updateGameCicle()));
+    cicleTime = 1000;
 
     cubeSize = 1; // Dimensão do bloco 1 x 1 x 1
 
@@ -38,20 +65,10 @@ GLWidget::GLWidget()
     stepTranslate = cubeSize * 5; // Define o passo de translação
 }
 
-void GLWidget::updateGame() {
-    board.updateGame();
-    if(board.gameOver) {
-        QMessageBox msgBox;
-        msgBox.setText("GAME OVER!");
-        msgBox.exec();
-        close();
-    } else
-        gameTimer->start(animationTime);
-}
-
 // Destructor
 GLWidget::~GLWidget() {
     glDeleteLists(cubeListIndex, 1);
+    glDeleteTextures(1, &_textureBorder);
     glDeleteTextures(PIECE_COUNT, _texturesBox);
 }
 
@@ -68,9 +85,9 @@ void GLWidget::initializeGL() {
     setupTextures();
     setupLighting();
 
-    drawCube();
+    drawCube(); // Cria o displayList utilizado para desenhar um bloco
 
-    gameTimer->start(animationTime * 2);
+    gameCicleTimer->start(cicleTime * 2); // Inicia o ciclo de jogo
 }
 
 // Carrega e configura as texturas que serão utilizadas no projeto
@@ -116,7 +133,9 @@ void GLWidget::setupLighting() {
     glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
 }
 
-// Constrói a DisplayList responsável por gerar um dos cubos que irá compor a tela
+/* Constrói a DisplayList responsável por gerar um dos cubos
+ * que irá compor a tela
+ */
 void GLWidget::drawCube() {
     cubeListIndex = glGenLists(1);
     glNewList(cubeListIndex, GL_COMPILE);
@@ -162,7 +181,7 @@ void GLWidget::drawCube() {
     glEndList();
 }
 
-// OpenGL painting code goes here
+// OpenGL painting
 void GLWidget::paintGL() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
@@ -173,18 +192,23 @@ void GLWidget::paintGL() {
     glRotatef(angleX, 0, 1, 0);
     glRotatef(angleY, 1, 0, 0);
 
-    paintBoardBorder();
-    paintBoardContent();
+    paintBoardBorder(); // Constrói a borda
+    paintBoardContent(); // Constrói o conteúdo da board
 
     // Framerate control
     timer->start(20);
 }
 
+/* Renderiza as bordas da board, facilitando a visualização
+ * dos limites.
+ */
 void GLWidget::paintBoardBorder() {
     glBindTexture(GL_TEXTURE_2D, _textureBorder);
     glPushMatrix();
+        // posiciona a origem na parte superior esquerda da board
         glTranslatef(-(board.width * cubeSize), (board.height * cubeSize), 0);
 
+        // renderiza a borda superior
         glPushMatrix();
             for(int x = 0; x < (board.width + 2); x++) {
                 glCallList(cubeListIndex);
@@ -192,7 +216,9 @@ void GLWidget::paintBoardBorder() {
             }
         glPopMatrix();
 
+        // renderiza a borda inferior
         glPushMatrix();
+            // posiciona a origem na parte inferior esquerda da board
             glTranslatef(0, -(board.height + 1) * (cubeSize * 2), 0);
             for(int x = 0; x < (board.width + 2); x++) {
                 glCallList(cubeListIndex);
@@ -200,7 +226,9 @@ void GLWidget::paintBoardBorder() {
             }
         glPopMatrix();
 
+        // renderiza a borda esquerda
         glPushMatrix();
+            // posiciona a origem um bloco abaixo da parte superior esquerda da board
             glTranslatef(0, -(cubeSize * 2), 0);
             for(int y = 0; y < board.height; y++) {
                 glCallList(cubeListIndex);
@@ -208,7 +236,9 @@ void GLWidget::paintBoardBorder() {
             }
         glPopMatrix();
 
+        // renderiza a borda direita
         glPushMatrix();
+            // posiciona a origem um bloco abaixo da parte superior direita da board
             glTranslatef((board.width + 1) * (cubeSize * 2), -(cubeSize * 2), 0);
             for(int y = 0; y < board.height; y++) {
                 glCallList(cubeListIndex);
@@ -218,6 +248,7 @@ void GLWidget::paintBoardBorder() {
     glPopMatrix();
 }
 
+// Renderiza o conteúdo da board com as peças já posicionadas
 void GLWidget::paintBoardContent() {
     glTranslatef(-((board.width - 2) * cubeSize), ((board.height - 2) * cubeSize), 0);
 
@@ -235,12 +266,48 @@ void GLWidget::paintBoardContent() {
     }
 }
 
+// This is called when the OpenGL window is resized
+void GLWidget::resizeGL(int width, int height) {
+    // Prevent divide by zero (in the gluPerspective call)
+    if (height == 0)
+        height = 1;
+
+    glViewport(0, 0, width, height); // Reset current viewport
+
+    glMatrixMode(GL_PROJECTION); // Select projection matrix
+    glLoadIdentity(); // Reset projection matrix
+
+    gluPerspective(45, static_cast<GLfloat>(width)/height, 0.1, 1000); // Calculate aspect ratio
+
+    glMatrixMode(GL_MODELVIEW); // Select modelview matrix
+    glLoadIdentity(); // Reset modelview matrix
+}
+
+// Executa a atualização do ciclo de jogo
+void GLWidget::updateGameCicle() {
+    board.nextGameCicle();
+
+    if(board.gameOver) {
+        gameOver();
+    } else // Caso não tenha chegado ao fim, inicia o timer novamente
+        gameCicleTimer->start(cicleTime);
+}
+
+void GLWidget::gameOver() {
+    string msgPoints = " Você conseguiu " + std::to_string(board.score) + " ponto" + (board.score > 1 ? "s" : "") + ".";
+    string msg = "GAME OVER!" + (board.score > 1 ? msgPoints : "");
+    char _msg[msg.size() + 1];
+    strcpy(_msg, msg.c_str());
+
+    QMessageBox msgBox;
+    msgBox.setText(_msg);
+    msgBox.exec();
+    close();
+}
+
+// Handler de eventos do teclado
 void GLWidget::keyPressEvent(QKeyEvent *event) {
     switch (event->key()) {
-        case Qt::Key_Escape:
-            close();
-            break;
-
         case Qt::Key_R:
             board.rotate();
             break;
@@ -275,31 +342,11 @@ void GLWidget::keyPressEvent(QKeyEvent *event) {
                 angleX = angleX > 360 ? angleX - 360 : angleX;
             break;
 
+        case Qt::Key_Escape:
+                close();
+            break;
+
         default:
             QGLWidget::keyPressEvent(event);
-    }
-}
-
-// This is called when the OpenGL window is resized
-void GLWidget::resizeGL(int width, int height) {
-    // Prevent divide by zero (in the gluPerspective call)
-    if (height == 0)
-        height = 1;
-
-    glViewport(0, 0, width, height); // Reset current viewport
-
-    glMatrixMode(GL_PROJECTION); // Select projection matrix
-    glLoadIdentity(); // Reset projection matrix
-
-    gluPerspective(45, static_cast<GLfloat>(width)/height, 0.1, 1000); // Calculate aspect ratio
-
-    glMatrixMode(GL_MODELVIEW); // Select modelview matrix
-    glLoadIdentity(); // Reset modelview matrix
-}
-
-void GLWidget::changeEvent(QEvent *event) {
-    switch (event->type()) {
-        default:
-            break;
     }
 }
