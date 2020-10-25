@@ -3,6 +3,7 @@
 #include <GL/glu.h>
 #include <QKeyEvent>
 #include <QTimer>
+#include <QMessageBox>
 
 #include <iostream>
 #include <string>
@@ -40,9 +41,12 @@ GLWidget::GLWidget()
 void GLWidget::updateGame() {
     board.updateGame();
     if(board.gameOver) {
+        QMessageBox msgBox;
+        msgBox.setText("GAME OVER!");
+        msgBox.exec();
         close();
-    }
-    gameTimer->start(animationTime);
+    } else
+        gameTimer->start(animationTime);
 }
 
 // Destructor

@@ -163,8 +163,6 @@ void Board::registerScore() {
 void Board::updateGame() {
     if(!checkingLines || !checkLines())
         moveDown();
-    else
-        pieceY = -1;
 
     checkEndGame();
 }
@@ -177,7 +175,7 @@ void Board::dropPiece() {
         }
     }
 
-    checkingLines = true;
+    checkingLines = checkLines();
 
     resetPiece();
 }
