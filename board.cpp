@@ -63,7 +63,7 @@ void Board::resetPiece() {
 
 // Seleciona uma peça de forma "aleatória".
 Piece Board::randomPiece() {
-    return Piece(QRandomGenerator::global()->bounded(PIECE_COUNT) + 1);
+    return Piece(QRandomGenerator::global()->bounded(PIECE_COUNT));
 }
 
 /* Atualiza a matriz responsável por armazenar a
@@ -80,7 +80,7 @@ void Board::updatePieceState() {
     // Carrega as configurações da peça a partir da matriz base (pieceTable).
     for(int x = 0; x < pieceStateSize; x++) {
         for(int y = 0; y < 2; y++) {
-            pieceState[x][y] = pieceTable[piece][x][y] > 0 ? piece : 0;
+            pieceState[x][y] = pieceTable[piece][x][y] > 0 ? (piece + 1) : 0;
         }
     }
 
@@ -107,10 +107,10 @@ void Board::executeRotation() {
 
     // A rotação da peça Line é basicamente colocá-la em vertical
     if(piece == Line) {
-        pieceState[0][0] = piece;
-        pieceState[0][1] = piece;
-        pieceState[0][2] = piece;
-        pieceState[0][3] = piece;
+        pieceState[0][0] = piece+1;
+        pieceState[0][1] = piece+1;
+        pieceState[0][2] = piece+1;
+        pieceState[0][3] = piece+1;
         pieceState[1][0] = 0;
         pieceState[2][0] = 0;
         pieceState[3][0] = 0;
