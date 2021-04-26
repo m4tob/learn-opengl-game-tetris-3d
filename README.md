@@ -1,7 +1,11 @@
-# OpenGL - Tetris 3D
-Esse repositório é o conjunto de códigos fonte e recursos utilizados para o desenvolvimento de uma atividade avaliativa da disciplina de Computação Gráfica do Cruso de Engenharia da Computação da Universidade Estadual de Feira de Santana - UEFS.
+# OpenGL - Tetris 3D Game
+This repository store the source of Tetris Game. This project is a college project of Compute Engineer of Universidade Estadual de Feira de Santana - UEFS.
 
-O objetivo da atividade é gerar, a partir da linguagem C++ com a API OpenGL, o jogo Tetris em formado 3D.
+This project is builded with C++ language and OpenGL API. The goal of project is build a Tetris Game in 3D view.
 
-## Instruções de Execução
-O projeto deve ser aberto através da IDE QT Creator. Ao executá-lo é possível interagir com o modelo construído através das teclas direcionais e o teclado numérico.
+## Execution
+To run the project, use QT Creator IDE.
+
+## Instructions 
+To mode the parts, use directional keys. To rotate the part, use R key.
+You also can rotate or translate the board with numeric directional keys (2, 4, 6, 8).
