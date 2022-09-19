@@ -1,4 +1,4 @@
-# OpenGL - Tetris Game 3D
+# Learn - OpenGL: Tetris Game 3D
 This repository store the source of Tetris Game. This project is a college project of Compute Engineer of Universidade Estadual de Feira de Santana - UEFS.
 
 This project is builded with C++ language and OpenGL API. The goal of project is build a Tetris Game in 3D view.
